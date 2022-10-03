@@ -47,23 +47,45 @@ public class PacMan {
 	private static Controls controlsListener = new Controls();
 	public static int livesLeft = 2;
 
-	public static GameObject[] objectList = new GameObject[32];
+	public static final int MAX_OBJECTS = 32;
+	public static GameObject[] objectList = new GameObject[MAX_OBJECTS];
 	public static int objectCount = 0;
+
+	// deleted object management
+	public static int[] freedIDs = new int[MAX_OBJECTS];
+	public static int freedIDCount = 0;
 	
 	public static void spawnObject(GameObject object) {
 		object.pacMan = instance;
-		objectList[objectCount] = object;
-		objectCount++;
+		int idToPopulate = objectCount;
+		if (freedIDCount != 0) {
+			freedIDCount--; // pop it off
+			idToPopulate = freedIDs[freedIDCount];
+		} else {
+			objectCount++;
+		}
+		objectList[idToPopulate] = object;
+	}
+	
+	// make sure object is otherwise fully dereferenced first before using
+	public static void deleteObject(GameObject object) {
+		freedIDs[freedIDCount] = object.id;
+		freedIDCount++; // push it on
+		objectList[object.id] = null; // remove it from the list
 	}
 	
 	private static void updateObjects() {
 		for (int i=0; i<objectCount; i++) {
+			if (objectList[i] == null)
+				continue;
 			objectList[i].update();
 		}
 	}
 	
 	private static void drawObjectsPaused() {
 		for (int i=0; i<objectCount; i++) {
+			if (objectList[i] == null)
+				continue;
 			objectList[i].draw(true);
 		}
 	}
