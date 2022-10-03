@@ -4,6 +4,7 @@ import ie.scifest.pacman.PacMan;
 import ie.scifest.pacman.util.Mth;
 
 public class GameObject {
+	int id;
 	int posx;
 	int posy;
 	
