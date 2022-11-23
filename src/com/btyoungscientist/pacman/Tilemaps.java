@@ -1,4 +1,4 @@
-package ie.scifest.pacman;
+package com.btyoungscientist.pacman;
 
 public class Tilemaps {
 	

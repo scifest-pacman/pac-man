@@ -1,7 +1,8 @@
 package ie.scifest.pacman.object;
 
-import ie.scifest.pacman.Controls;
-import ie.scifest.pacman.Controls.Keys;
+import com.btyoungscientist.pacman.Controls;
+import com.btyoungscientist.pacman.Controls.Keys;
+
 import ie.scifest.pacman.render.Animation;
 import ie.scifest.pacman.render.Sprite;
 import ie.scifest.pacman.render.Animation.AnimationFrame;

@@ -6,7 +6,7 @@ import java.util.HashMap;
 
 import javax.imageio.ImageIO;
 
-import ie.scifest.pacman.PacMan;
+import com.btyoungscientist.pacman.PacMan;
 
 public class Sprite {
 	public static class DrawCall {

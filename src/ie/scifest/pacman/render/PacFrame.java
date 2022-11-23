@@ -5,7 +5,7 @@ import java.awt.image.ImageObserver;
 
 import javax.swing.JFrame;
 
-import ie.scifest.pacman.PacMan;
+import com.btyoungscientist.pacman.PacMan;
 
 public class PacFrame extends JFrame implements ImageObserver {
 

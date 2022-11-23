@@ -1,10 +1,11 @@
 package ie.scifest.pacman.object;
 
-import ie.scifest.pacman.PacMan;
+import com.btyoungscientist.pacman.PacMan;
+
 import ie.scifest.pacman.util.Mth;
 
 public class GameObject {
-	int id;
+	public int id;
 	int posx;
 	int posy;
 	

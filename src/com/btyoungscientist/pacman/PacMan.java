@@ -1,4 +1,4 @@
-package ie.scifest.pacman;
+package com.btyoungscientist.pacman;
 
 import java.awt.BorderLayout;
 import java.awt.Graphics2D;
@@ -218,6 +218,17 @@ public class PacMan {
 	public static void main(String[] args) {
 		System.out.println("Starting Pac-Man!");
 		instance = new PacMan();
+		
+		for (int i=0; i<args.length; i++) {
+		try {
+			if (args[i].toLowerCase().contains("highscore")) {
+				scoreHigh = Integer.parseInt(args[i+1]) / 10;
+			}
+		} catch (Exception e) {
+			System.out.println("Failed to parse high score argument.");
+		}
+		}
+		
 		instance.createWindow();
 		instance.gameLoop();
 		System.out.println("Exiting!");

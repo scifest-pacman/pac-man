@@ -5,7 +5,7 @@ import java.awt.Graphics;
 
 import javax.swing.JPanel;
 
-import ie.scifest.pacman.PacMan;
+import com.btyoungscientist.pacman.PacMan;
 
 public class PacPanel extends JPanel {
 
