@@ -12,18 +12,16 @@ import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 
-import ie.scifest.pacman.object.GameObject;
-import ie.scifest.pacman.render.PacFrame;
-import ie.scifest.pacman.render.PacPanel;
-import ie.scifest.pacman.render.Sprite;
-import ie.scifest.pacman.util.Mth;
+import com.btyoungscientist.pacman.object.GameObject;
+import com.btyoungscientist.pacman.render.*;
+import com.btyoungscientist.pacman.util.Mth;
 
 public class PacMan {
 	
 	public static PacMan instance;
 	public JFrame mainWindow;
-	public static final int xRes = 224+16;
-	public static final int yRes = 288+48;
+	public static final int xRes = 224+12;
+	public static final int yRes = 288+42;
 	public static final int windowScale = 2;
 	private long prevTime;
 	public double deltaTime;
@@ -55,7 +53,21 @@ public class PacMan {
 	public static int[] freedIDs = new int[MAX_OBJECTS];
 	public static int freedIDCount = 0;
 	
-	public static void spawnObject(GameObject object) {
+	public static GameObject player;
+	public static GameObject blinky;
+	
+	public static int scatterTimer = 420;
+	public static int scatterCount = 0;
+	public static int timeToScatterAgain = 0;
+	public static int bigDotTimer = 0;
+	
+	private boolean _isSetToClose = false;
+	
+	public void close() {
+		_isSetToClose = true;
+	}
+	
+	public static GameObject spawnObject(GameObject object) {
 		object.pacMan = instance;
 		int idToPopulate = objectCount;
 		if (freedIDCount != 0) {
@@ -64,7 +76,9 @@ public class PacMan {
 		} else {
 			objectCount++;
 		}
+		object.id = idToPopulate;
 		objectList[idToPopulate] = object;
+		return object;
 	}
 	
 	// make sure object is otherwise fully dereferenced first before using
@@ -104,6 +118,9 @@ public class PacMan {
 			while (System.nanoTime()-prevTime < 1000.0d/60.0d/0.000001d) {
 				// ghetto vsync
 			}
+			
+			if (_isSetToClose)
+				break;
 			
 			if (tmp_closeTimer > 120)
 				break;
@@ -179,6 +196,23 @@ public class PacMan {
 				background[i+(1000-eatenDotCountTilemap.length)] = eatenDotCountTilemap[i];
 			}
 			
+			if (bigDotTimer > 0) {
+				bigDotTimer--;
+			} else {
+			if (scatterTimer > 0)
+				scatterTimer--;
+			else
+				timeToScatterAgain++;
+			if (timeToScatterAgain >= 1200 && scatterCount < 3) {
+				timeToScatterAgain = 1;
+				scatterCount++;
+				if (scatterCount >= 2) 
+					scatterTimer = 300;
+				else
+					scatterTimer = 420;
+			}
+			}
+			
 			Sprite.RenderSprites();
 			
 			FinishUpFrame();
@@ -211,7 +245,11 @@ public class PacMan {
 		mainWindow.add(jPanel, BorderLayout.CENTER);
 		mainWindow.pack();
 		mainWindow.setVisible(true);
-		spawnObject(new ie.scifest.pacman.object.PacMan());
+		player = spawnObject(new com.btyoungscientist.pacman.object.PacMan());
+		spawnObject(new com.btyoungscientist.pacman.object.ghosts.Clyde());
+		spawnObject(new com.btyoungscientist.pacman.object.ghosts.Inky());
+		spawnObject(new com.btyoungscientist.pacman.object.ghosts.Pinky());
+		blinky = spawnObject(new com.btyoungscientist.pacman.object.ghosts.Blinky());
 	}
 	
 	// entry point
@@ -219,20 +257,15 @@ public class PacMan {
 		System.out.println("Starting Pac-Man!");
 		instance = new PacMan();
 		
-		for (int i=0; i<args.length; i++) {
-		try {
-			if (args[i].toLowerCase().contains("highscore")) {
-				scoreHigh = Integer.parseInt(args[i+1]) / 10;
-			}
-		} catch (Exception e) {
-			System.out.println("Failed to parse high score argument.");
-		}
-		}
-		
+		ArgumentHandlers.parseArgs(args);
 		instance.createWindow();
 		instance.gameLoop();
 		System.out.println("Exiting!");
 		System.exit(0);
+	}
+	
+	public void bigDot() {
+		bigDotTimer = 380;
 	}
 	
 	public static int[] background = {

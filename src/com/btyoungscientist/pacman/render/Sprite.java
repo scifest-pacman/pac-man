@@ -1,4 +1,4 @@
-package ie.scifest.pacman.render;
+package com.btyoungscientist.pacman.render;
 
 import java.awt.image.BufferedImage;
 import java.io.IOException;

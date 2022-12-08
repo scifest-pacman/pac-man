@@ -1,22 +1,22 @@
-package ie.scifest.pacman.object;
+package com.btyoungscientist.pacman.object;
 
 import com.btyoungscientist.pacman.PacMan;
-
-import ie.scifest.pacman.util.Mth;
+import com.btyoungscientist.pacman.util.Mth;
 
 public class GameObject {
 	public int id;
-	int posx;
-	int posy;
+	public int posx;
+	public int posy;
+	public int curTile;
 	
-	enum rotations {
+	public enum rotations {
 		left,
 		right,
 		up,
 		down
 	}
 	
-	rotations rotation = rotations.left;
+	public rotations rotation = rotations.left;
 	public PacMan pacMan;
 	
 	public GameObject() {
@@ -26,6 +26,7 @@ public class GameObject {
 	public void update() {
 		posx = Mth.mod(posx, PacMan.xRes);
 		posy = Mth.mod(posy, PacMan.yRes);
+		curTile = (int)(Math.floor((posx)/8.0d) + (Math.floor((posy)/8.0d) * 28));
 	}
 	
 	public void draw(boolean drawOnly) {};
