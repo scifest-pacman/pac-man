@@ -2,10 +2,19 @@ package com.btyoungscientist.pacman.object.ghosts;
 
 public class Inky extends Ghost {
 	
+	int homeX = 96;
+	int homeY = 144;
+	
+	int[] getHome() {
+		int targetX = (int)Math.floor(homeX/8)*8;
+		int targetY = (int)Math.floor(homeY/8)*8;
+		return new int[] { targetX, targetY };
+	}
+	
 	public Inky() {
 		super();
-		posx = posxprev = 96;
-		posy = posyprev = 144;
+		posx = posxprev = homeX;
+		posy = posyprev = homeY;
 	}
 	
 	int getGhostColorID() {

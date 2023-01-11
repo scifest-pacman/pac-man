@@ -10,7 +10,6 @@ import com.btyoungscientist.pacman.util.Mth;
 @SuppressWarnings("static-access")
 public class Ghost extends GameObject {
 	
-	int testCoord = 0;
 	int speed = 1;
 	int curAnim = 0;
 	int animTimer = 0;
@@ -24,8 +23,20 @@ public class Ghost extends GameObject {
 	boolean isInGhostHouse = true;
 	
 	boolean isFrightened = false;
+	boolean isEaten = false;
+	boolean reenteringHouse = false;
+	boolean justEaten = false;
 	
 	boolean halfStep;
+	
+	int homeX = 112;
+	int homeY = 144;
+	
+	int[] getHome() {
+		int targetX = (int)Math.floor(homeX/8)*8;
+		int targetY = (int)Math.floor(homeY/8)*8;
+		return new int[] { targetX, targetY };
+	}
 	
 	// AI modes
 	boolean isScared() { // basically in other terms, is it Clyde
@@ -56,8 +67,6 @@ public class Ghost extends GameObject {
 		return 0;
 	}
 
-	PacMan player;
-	
 	int dbg_targetX;
 	int dbg_targetY;
 	
@@ -66,9 +75,8 @@ public class Ghost extends GameObject {
 	
 	public Ghost() {
 		super();
-		posx = posxprev = 112;
-		posy = posyprev = 116;
-		player = (PacMan)pacMan.player;
+		posx = posxprev = homeX;
+		posy = posyprev = homeY-28;
 		rotation = nextDirection = spawnsInGhostHouse() ? rotations.up : rotations.left;
 		isInGhostHouse = spawnsInGhostHouse();
 	}
@@ -120,16 +128,16 @@ public class Ghost extends GameObject {
 		boolean blockInTunnel = Mth.mod(posx+xColOff, _xres)>=224;	
 		
 		// sorry for the YandereDev programming ^^;
-		if (pacMan.background[upTile] != 6 && !blockInTunnel && rotation != rotations.down) {
+		if (pacMan.background[upTile] <= 46 && !blockInTunnel && rotation != rotations.down) {
 			rotationsAbleToBeUsed.add(rotations.up); 
 		}
-		if (pacMan.background[downTile] != 6 && !blockInTunnel && rotation != rotations.up) {
+		if (pacMan.background[downTile] <= 46 && !blockInTunnel && rotation != rotations.up) {
 			rotationsAbleToBeUsed.add(rotations.down);
 		}
-		if (pacMan.background[leftTile] != 6 && rotation != rotations.right) {
+		if (pacMan.background[leftTile] <= 46 && rotation != rotations.right) {
 			rotationsAbleToBeUsed.add(rotations.left);
 		}
-		if (pacMan.background[rightTile] != 6 && rotation != rotations.left) {
+		if (pacMan.background[rightTile] <= 46 && rotation != rotations.left) {
 			rotationsAbleToBeUsed.add(rotations.right);
 		}
 		} catch (Exception e) {
@@ -172,16 +180,16 @@ public class Ghost extends GameObject {
 				fposy >= 116 && fposy <= 212) && !blockInTunnel;
 		
 		// sorry for the YandereDev programming ^^;
-		if (pacMan.background[upTile] != 6 && canGoUp && rotation != rotations.down) {
+		if ((pacMan.background[upTile] <= 46 || (isEaten && reenteringHouse)) && canGoUp && rotation != rotations.down) {
 			rotationsAbleToBeUsed.add(rotations.up);
 		}
-		if (pacMan.background[downTile] != 6 && !blockInTunnel && rotation != rotations.up) {
+		if ((pacMan.background[downTile] <= 46 || (isEaten && reenteringHouse)) && !blockInTunnel && rotation != rotations.up) {
 			rotationsAbleToBeUsed.add(rotations.down);
 		}
-		if (pacMan.background[leftTile] != 6 && rotation != rotations.right) {
+		if ((pacMan.background[leftTile] <= 46 || (isEaten && reenteringHouse)) && rotation != rotations.right) {
 			rotationsAbleToBeUsed.add(rotations.left);
 		}
-		if (pacMan.background[rightTile] != 6 && rotation != rotations.left) {
+		if ((pacMan.background[rightTile] <= 46 || (isEaten && reenteringHouse)) && rotation != rotations.left) {
 			rotationsAbleToBeUsed.add(rotations.right);
 		}
 		} catch (Exception e) {
@@ -192,16 +200,14 @@ public class Ghost extends GameObject {
 		
 		int lowestDist = Integer.MAX_VALUE;
 		
-		GameObject Player = pacMan.player;
-		
-		if (pacMan.scatterTimer < 1 && isScared() && Mth.dist(Player.posx, Player.posy, fposx, fposy) < 64) {
+		if (!isEaten && (pacMan.scatterTimer < 1 && isScared() && Mth.dist(((PacMan)pacMan.player).posx, ((PacMan)pacMan.player).posy, fposx, fposy) < 64)) {
 			return DoFrightenedAI();
 		}
 		
-		int[] targetOffset = getTargetOffset(player.rotation);
+		int[] targetOffset = getTargetOffset(((PacMan)pacMan.player).rotation);
 		
-		int targetX = (int)Math.floor(Player.posx/8)*8 + targetOffset[0];
-		int targetY = (int)Math.floor(Player.posy/8)*8 + targetOffset[1];
+		int targetX = (int)Math.floor(((PacMan)pacMan.player).posx/8)*8 + targetOffset[0];
+		int targetY = (int)Math.floor(((PacMan)pacMan.player).posy/8)*8 + targetOffset[1];
 		
 		if (IsAwareOfBlinky()) {
 			GameObject Blinky = pacMan.blinky;
@@ -217,6 +223,36 @@ public class Ghost extends GameObject {
 			int[] target = getScatterTarget();
 			targetX = target[0];
 			targetY = target[1];
+		}
+		
+		if (isEaten) {
+			int[] target = getHome();
+			targetX = target[0];
+			targetY = target[1];
+			
+			int posX = (int)Math.floor(fposx/8)*8;
+			int posY = (int)Math.floor(fposy/8)*8;
+			
+			int houseTargetX = (int)Math.floor(112/8)*8;
+			int houseTargetY = (int)Math.floor(116/8)*8;
+			
+			if (!reenteringHouse) {
+				targetX = houseTargetX;
+				targetY = houseTargetY;
+			}
+			
+			if (reenteringHouse == true && posX == targetX && posY == targetY) {
+				reenteringHouse = false;
+				isInGhostHouse = true;
+				isEaten = false;
+				isFrightened = false;
+			}
+			
+			if (!(fposy >= 108 && (fposx >= 88 && fposx <= 136)))
+				reenteringHouse = false;
+			
+			if(posX == houseTargetX && posY == houseTargetY)
+				reenteringHouse = true;
 		}
 		
 		targetX = Mth.mod(targetX, pacMan.xRes);
@@ -257,13 +293,15 @@ public class Ghost extends GameObject {
 	}
 	
 	public void update() {
+		if ((PacMan)pacMan.player == null || ((PacMan)pacMan.player).isDying)
+			return;
 		super.update();
 		
-		testCoord++;
+		justEaten = false;
 		
 		curTile = (int)(Math.floor((posx)/8.0d) + (Math.floor((posy-8)/8.0d) * 28));
 		
-		if (!isFrightened && pacMan.bigDotTimer > 0) 
+		if (!isFrightened && pacMan.bigDotTimer >= 379) 
 		{
 			int xColOff = 0;
 			int yColOff = 0;		
@@ -275,13 +313,13 @@ public class Ghost extends GameObject {
 			
 			isFrightened = true;
 			// reverse direction
-			if (rotation == rotations.right && pacMan.background[leftTile] != 6)
+			if (rotation == rotations.right && pacMan.background[leftTile] <= 46)
 				nextDirection = rotation = rotations.left;
-			else if (rotation == rotations.left && pacMan.background[rightTile] != 6)
+			else if (rotation == rotations.left && pacMan.background[rightTile] <= 46)
 				nextDirection = rotation = rotations.right;
-			else if (rotation == rotations.up && pacMan.background[downTile] != 6)
+			else if (rotation == rotations.up && pacMan.background[downTile] <= 46)
 				nextDirection = rotation = rotations.down;
-			else if (rotation == rotations.down && pacMan.background[upTile] != 6)
+			else if (rotation == rotations.down && pacMan.background[upTile] <= 46)
 				nextDirection = rotation = rotations.up;
 		} else if (pacMan.bigDotTimer <= 0) {
 			isFrightened = false;
@@ -291,18 +329,22 @@ public class Ghost extends GameObject {
 		
 		// do AI
 		if (((posx % 8) == 4 && (posy % 8) == 4) || (isInGhostHouse && (posy % 8) == 4)) {
-			if (prevTile != curTile) {
+			if (prevTile != curTile || isInGhostHouse) {
 			
 				rotation = nextDirection;
 			
+				if (isEaten) {
+					nextDirection = DoTargetedAI();
+				} else {
+				
 				if (!isInGhostHouse) {
 					if (isFrightened)
 						nextDirection = DoFrightenedAI();
 					else	
 						nextDirection = DoTargetedAI();
-				} else if (posy >= 144) {
+				} else if (posy >= 142) {
 					rotation = nextDirection = rotations.up;
-				} else if (posy <= 132) {
+				} else if (posy <= 138) {
 					rotation = nextDirection = rotations.down;
 				}
 				
@@ -325,6 +367,7 @@ public class Ghost extends GameObject {
 					}
 				}
 			}
+			}
 
 			prevTile = curTile;
 		}
@@ -337,6 +380,11 @@ public class Ghost extends GameObject {
 		halfStep = !halfStep;
 		
 		int _speed = isFrightened ? 1 : speed;
+		
+		if (isEaten) {
+			halfSpeed = false;
+			_speed = speed * 2;
+		}
 		
 		if (halfSpeed == false || (halfSpeed == true && halfStep)) {
 		
@@ -371,11 +419,18 @@ public class Ghost extends GameObject {
 		
 		curTile = (int)(Math.floor((posx)/8.0d) + (Math.floor((posy)/8.0d) * 28));
 		
-		if (curTile == player.curTile) { // kill pacman
-			if (!isFrightened)
-				player.die();
-			else {
-				pacMan.deleteObject(this);
+		if (curTile == ((PacMan)pacMan.player).curTile) { // kill pacman
+			if (!isFrightened && !isEaten)
+				((PacMan)pacMan.player).die();
+			else if (!isEaten){
+				pacMan.waitTimer = 60;
+				pacMan.spawnObject(new Score(posx, posy, pacMan.eatenGhostCount));
+				pacMan.eatGhost();
+				((PacMan)pacMan.player).justAte = true;
+				isEaten = true;
+				justEaten = true;
+				reenteringHouse = false;
+				isInGhostHouse = false;
 			}
 		}
 		
@@ -390,22 +445,30 @@ public class Ghost extends GameObject {
 	}
 	
 	AnimationFrame curFrameBody = anims[curAnim].frames[0];
-	AnimationFrame curFrameEyes = anims[curAnim].frames[0];
+	AnimationFrame curFrameEyes = anims[4].frames[0];
 	
 	public void draw(boolean drawOnly) {
+		if (justEaten || ((((PacMan)pacMan.player) != null && ((PacMan)pacMan.player).isDying && pacMan.waitTimer <= 90)) || (pacMan.waitTimer > 150))
+			return;
+		
 		if (!drawOnly) {
 			curAnim = rotation.ordinal();
 			animTimer += Mth.dist(posx, posy, posxprev, posyprev);
 			curFrameEyes = anims[curAnim].frames[(int)(animTimer/animSpeedDiv) % anims[curAnim].frames.length];
 			curFrameBody = anims[4].frames[(int)(animTimer/animSpeedDiv) % anims[4].frames.length];
+		} else {
+			curAnim = spawnsInGhostHouse() ? 2 : 0;
+			curFrameEyes = anims[curAnim].frames[(int)(animTimer/animSpeedDiv) % anims[curAnim].frames.length];
+			curFrameBody = anims[4].frames[(int)(animTimer/animSpeedDiv) % anims[4].frames.length];
 		}
 		int colorOffset = (getGhostColorID() * 16);
 		if (isFrightened)
-			colorOffset = 4 * 16;
-		Sprite.DrawSprite("/sprite/ghosts.png", posx-8, posy-8, curFrameBody.width, curFrameBody.height, curFrameBody.rectX, curFrameBody.rectY + colorOffset);
-		if (!isFrightened)
+			colorOffset = (4 + (pacMan.bigDotTimer < 180 ? ((pacMan.bigDotTimer/15) % 2) : 0)) * 16;
+		if (!isEaten)
+			Sprite.DrawSprite("/sprite/ghosts.png", posx-8, posy-8, curFrameBody.width, curFrameBody.height, curFrameBody.rectX, curFrameBody.rectY + colorOffset);
+		if (!isFrightened || isEaten)
 			Sprite.DrawSprite("/sprite/ghosts.png", posx-8, posy-8, curFrameEyes.width, curFrameEyes.height, curFrameEyes.rectX, curFrameEyes.rectY);
-		Sprite.DrawSprite("/sprite/tiles.png", dbg_targetX, dbg_targetY, 8, 8, 0, 32); // debug only!!!
+		//Sprite.DrawSprite("/sprite/tiles.png", dbg_targetX, dbg_targetY, 8, 8, 0, 32); // debug only!!!
 	}
 	
 	private void doCollision() {
