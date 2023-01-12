@@ -5,9 +5,9 @@ import com.btyoungscientist.pacman.util.Mth;
 
 public class GameObject {
 	public int id;
-	public int posx;
-	public int posy;
-	public int curTile;
+	public int posx = 0;
+	public int posy = 0;
+	public int curTile = 0;
 	
 	public enum rotations {
 		left,

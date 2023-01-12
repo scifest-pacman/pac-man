@@ -22,7 +22,7 @@ public class PacMan {
 	public JFrame mainWindow;
 	public static final int xRes = 224+12;
 	public static final int yRes = 288+44;
-	public static final int windowScale = 2;
+	public static int windowScale = 2;
 	public static final float framerate = 60.52469f;
 	private long prevTime;
 	public double deltaTime;

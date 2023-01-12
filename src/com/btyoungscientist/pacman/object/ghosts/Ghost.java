@@ -312,7 +312,11 @@ public class Ghost extends GameObject {
 		if ((!isFrightened && !isEaten) && pacMan.bigDotTimer >= 379) 
 		{
 			int xColOff = 0;
-			int yColOff = 0;		
+			int yColOff = 0;	
+			
+			
+			posy = ((int)Math.floor(posy/8)*8)+4;
+			posx = ((int)Math.floor(posx/8)*8)+4;
 			
 			int upTile = (int)(Math.floor(((posx+xColOff) % pacMan.xRes)/8.0d) + (Math.floor(((posy-8+yColOff) % pacMan.yRes)/8.0d) * 28));
 			int downTile = (int)(Math.floor(((posx+xColOff) % pacMan.xRes)/8.0d) + (Math.floor(((posy+8+yColOff) % pacMan.yRes)/8.0d) * 28));
