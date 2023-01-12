@@ -69,6 +69,9 @@ public class Tilemaps {
 	};
 	
 	
+	public static final int[] livesPrint = {
+			chr.l, chr.i, chr.v, chr.e, chr.s, 0, chr.zero
+	};
 	
 	public static class colFlg {
 		public static final int nonSolid = 0;

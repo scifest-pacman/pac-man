@@ -30,7 +30,7 @@ public class Ghost extends GameObject {
 	boolean halfStep;
 	
 	int homeX = 112;
-	int homeY = 144;
+	int homeY = 140;
 	
 	int[] getHome() {
 		int targetX = (int)Math.floor(homeX/8)*8;
@@ -41,6 +41,10 @@ public class Ghost extends GameObject {
 	// AI modes
 	boolean isScared() { // basically in other terms, is it Clyde
 		return false;
+	}
+	
+	Ghost getGhostToWaitOn() {
+		return null;
 	}
 	
 	int[] getScatterTarget() {
@@ -63,6 +67,10 @@ public class Ghost extends GameObject {
 		return false;
 	}
 	
+	boolean spawnsFacingDown() {
+		return false;
+	}
+	
 	int minimumPointsToExit() {
 		return 0;
 	}
@@ -76,8 +84,8 @@ public class Ghost extends GameObject {
 	public Ghost() {
 		super();
 		posx = posxprev = homeX;
-		posy = posyprev = homeY-28;
-		rotation = nextDirection = spawnsInGhostHouse() ? rotations.up : rotations.left;
+		posy = posyprev = homeY-24;
+		rotation = nextDirection = spawnsInGhostHouse() ? (spawnsFacingDown() ? rotations.down : rotations.up) : rotations.left;
 		isInGhostHouse = spawnsInGhostHouse();
 	}
 	
@@ -301,26 +309,32 @@ public class Ghost extends GameObject {
 		
 		curTile = (int)(Math.floor((posx)/8.0d) + (Math.floor((posy-8)/8.0d) * 28));
 		
-		if (!isFrightened && pacMan.bigDotTimer >= 379) 
+		if ((!isFrightened && !isEaten) && pacMan.bigDotTimer >= 379) 
 		{
 			int xColOff = 0;
 			int yColOff = 0;		
 			
-			int upTile = (int)(Math.floor((posx+xColOff)/8.0d) + (Math.floor((posy-8+yColOff)/8.0d) * 28));
-			int downTile = (int)(Math.floor((posx+xColOff)/8.0d) + (Math.floor((posy+8+yColOff)/8.0d) * 28));
-			int leftTile = (int)(Math.floor((posx-8+xColOff)/8.0d) + (Math.floor((posy+yColOff)/8.0d) * 28));
-			int rightTile = (int)(Math.floor((posx+8+xColOff)/8.0d) + (Math.floor((posy+yColOff)/8.0d) * 28));
+			int upTile = (int)(Math.floor(((posx+xColOff) % pacMan.xRes)/8.0d) + (Math.floor(((posy-8+yColOff) % pacMan.yRes)/8.0d) * 28));
+			int downTile = (int)(Math.floor(((posx+xColOff) % pacMan.xRes)/8.0d) + (Math.floor(((posy+8+yColOff) % pacMan.yRes)/8.0d) * 28));
+			int leftTile = (int)(Math.floor(((posx-8+xColOff) % pacMan.xRes)/8.0d) + (Math.floor(((posy+yColOff) % pacMan.yRes)/8.0d) * 28));
+			int rightTile = (int)(Math.floor(((posx+8+xColOff) % pacMan.xRes)/8.0d) + (Math.floor(((posy+yColOff) % pacMan.yRes )/8.0d) * 28));
 			
 			isFrightened = true;
-			// reverse direction
-			if (rotation == rotations.right && pacMan.background[leftTile] <= 46)
-				nextDirection = rotation = rotations.left;
-			else if (rotation == rotations.left && pacMan.background[rightTile] <= 46)
-				nextDirection = rotation = rotations.right;
-			else if (rotation == rotations.up && pacMan.background[downTile] <= 46)
-				nextDirection = rotation = rotations.down;
-			else if (rotation == rotations.down && pacMan.background[upTile] <= 46)
-				nextDirection = rotation = rotations.up;
+			
+			try {
+				// reverse direction
+				if (rotation == rotations.right && pacMan.background[leftTile] <= 46)
+					nextDirection = rotation = rotations.left;
+				else if (rotation == rotations.left && pacMan.background[rightTile] <= 46)
+					nextDirection = rotation = rotations.right;
+				else if (rotation == rotations.up && pacMan.background[downTile] <= 46)
+					nextDirection = rotation = rotations.down;
+				else if (rotation == rotations.down && pacMan.background[upTile] <= 46)
+					nextDirection = rotation = rotations.up;
+			} catch (Exception e) {
+				// bandaid fix for weird crash that shouldn't happen but does lol
+			}
+			
 		} else if (pacMan.bigDotTimer <= 0) {
 			isFrightened = false;
 		}
@@ -328,7 +342,7 @@ public class Ghost extends GameObject {
 		//System.out.printf("%s, %s\r", (posx % 8) == 4, ((posy % 8) == 4));
 		
 		// do AI
-		if (((posx % 8) == 4 && (posy % 8) == 4) || (isInGhostHouse && (posy % 8) == 4)) {
+		if (((posx % 8) == 4 && (posy % 8) == 4) || (isInGhostHouse)) {
 			if (prevTile != curTile || isInGhostHouse) {
 			
 				rotation = nextDirection;
@@ -342,13 +356,15 @@ public class Ghost extends GameObject {
 						nextDirection = DoFrightenedAI();
 					else	
 						nextDirection = DoTargetedAI();
-				} else if (posy >= 142) {
-					rotation = nextDirection = rotations.up;
-				} else if (posy <= 138) {
-					rotation = nextDirection = rotations.down;
+				} else if (posy >= 144) {
+					nextDirection = rotations.up;
+				} else if (posy <= 136) {
+					 nextDirection = rotations.down;
 				}
 				
-				if (isInGhostHouse && pacMan.score1p >= minimumPointsToExit()) {
+				Ghost ghostToWaitOn = getGhostToWaitOn();
+				
+				if (isInGhostHouse && pacMan.score1p >= minimumPointsToExit() && (ghostToWaitOn == null || ghostToWaitOn.isInGhostHouse == false)) {
 					if (posy < 144 && posx != 112) {
 						rotation = nextDirection = rotations.down;
 					} else if (posx < 112) {
@@ -419,7 +435,7 @@ public class Ghost extends GameObject {
 		
 		curTile = (int)(Math.floor((posx)/8.0d) + (Math.floor((posy)/8.0d) * 28));
 		
-		if (curTile == ((PacMan)pacMan.player).curTile) { // kill pacman
+		if (curTile == ((PacMan)pacMan.player).curTile && pacMan.waitTimer == 0) { // kill pacman
 			if (!isFrightened && !isEaten)
 				((PacMan)pacMan.player).die();
 			else if (!isEaten){
@@ -431,6 +447,8 @@ public class Ghost extends GameObject {
 				justEaten = true;
 				reenteringHouse = false;
 				isInGhostHouse = false;
+				posx = ((int)Math.floor(posx/8)*8)+4;
+				posy = ((int)Math.floor(posy/8)*8)+4;
 			}
 		}
 		
@@ -457,7 +475,10 @@ public class Ghost extends GameObject {
 			curFrameEyes = anims[curAnim].frames[(int)(animTimer/animSpeedDiv) % anims[curAnim].frames.length];
 			curFrameBody = anims[4].frames[(int)(animTimer/animSpeedDiv) % anims[4].frames.length];
 		} else {
-			curAnim = spawnsInGhostHouse() ? 2 : 0;
+			if (isInGhostHouse)
+				curAnim = spawnsInGhostHouse() ? 2 : (spawnsFacingDown() ? 1 : 0);
+			else
+				curAnim = rotation.ordinal();
 			curFrameEyes = anims[curAnim].frames[(int)(animTimer/animSpeedDiv) % anims[curAnim].frames.length];
 			curFrameBody = anims[4].frames[(int)(animTimer/animSpeedDiv) % anims[4].frames.length];
 		}

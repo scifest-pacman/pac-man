@@ -21,6 +21,7 @@ public class Controls extends KeyAdapter {
 	private static boolean KeyLeftPrev = false;
 	public static boolean KeyRight = false;
 	private static boolean KeyRightPrev = false;
+	public static boolean keyGotten = false;
 	
 	public static boolean GetKey(Keys key) {
 		boolean current = false;
@@ -96,6 +97,7 @@ public class Controls extends KeyAdapter {
 		// New key press
 		int key = e.getKeyCode();                                                
 
+		keyGotten = true;
     	if (key == KeyEvent.VK_UP || key == KeyEvent.VK_W) {                                          
     		KeyUp = true;
     	} else if (key == KeyEvent.VK_DOWN || key == KeyEvent.VK_S) {                                    
@@ -104,7 +106,9 @@ public class Controls extends KeyAdapter {
     		KeyLeft = true;
     	} else if (key == KeyEvent.VK_RIGHT || key == KeyEvent.VK_D) {                                    
     		KeyRight = true;
-    	}             
+    	} else {
+    		keyGotten = false;
+    	}
 	}
 	
 	public void keyReleased(KeyEvent e){       
@@ -119,7 +123,8 @@ public class Controls extends KeyAdapter {
 			KeyLeft = false;
 		} else if (key == KeyEvent.VK_RIGHT || key == KeyEvent.VK_D) {                                    
 			KeyRight = false;
-		}                              
+		}
+		keyGotten = false;
 	}
 	
 	public void updateOld() {

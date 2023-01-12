@@ -1,9 +1,11 @@
 package com.btyoungscientist.pacman.object.ghosts;
 
+import com.btyoungscientist.pacman.object.GameObject.rotations;
+
 public class Pinky extends Ghost {
 	
 	int homeX = 112;
-	int homeY = 144;
+	int homeY = 140;
 	
 	int[] getHome() {
 		int targetX = (int)Math.floor(homeX/8)*8;
@@ -15,10 +17,19 @@ public class Pinky extends Ghost {
 		super();
 		posx = posxprev = homeX;
 		posy = posyprev = homeY;
+		rotation = nextDirection = rotations.down;
+	}
+	
+	boolean spawnsFacingDown() {
+		return true;
 	}
 	
 	int getGhostColorID() {
 		return 1;
+	}
+	
+	Ghost getGhostToWaitOn() {
+		return (Ghost) pacMan.blinky;
 	}
 	
 	int minimumPointsToExit() {

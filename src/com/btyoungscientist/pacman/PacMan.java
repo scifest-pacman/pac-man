@@ -21,8 +21,9 @@ public class PacMan {
 	public static PacMan instance;
 	public JFrame mainWindow;
 	public static final int xRes = 224+12;
-	public static final int yRes = 288+42;
+	public static final int yRes = 288+44;
 	public static final int windowScale = 2;
+	public static final float framerate = 60.52469f;
 	private long prevTime;
 	public double deltaTime;
 	public double deltaTimeMillis;
@@ -37,13 +38,12 @@ public class PacMan {
 	public static int scoreHigh = 0; //multiplied by 10
 	public static int score2p = 0; //multiplied by 10
 	public static int eatenDotCount = 0;
-	private static final int flashCycle = 16; 
+	private static final int flashCycle = 30; 
 	private static double flashTimer = 0;
 	private static double tmp_closeTimer = 0;
 	BufferedImage mainTiles;
 	public Graphics2D gMain;
 	private static Controls controlsListener = new Controls();
-	public static int livesLeft = 2;
 
 	public static final int MAX_OBJECTS = 32;
 	public static GameObject[] objectList = new GameObject[MAX_OBJECTS];
@@ -60,14 +60,17 @@ public class PacMan {
 	public static GameObject clyde;
 	public static GameObject readyText;
 	public static GameObject playerText;
+	public static GameObject gameOverText;
 	
 	public static int scatterTimer = 420;
 	public static int scatterCount = 0;
 	public static int timeToScatterAgain = 0;
 	public static int bigDotTimer = 0;
 	public static int lives = 3;
+	public static int livesLeft = lives;
 	
 	public static int waitTimer = 300;
+	public static boolean gameOver = true;
 	
 	private boolean _isSetToClose = false;
 	
@@ -115,15 +118,17 @@ public class PacMan {
 	public static void addScore(int score) {
 		if (playerIs2P) {
 			score2p += score;
-			return;
+		} else {
+			score1p += score;
+			if (score1p == 1000)
+				livesLeft++;
 		}
-		score1p += score;
 	}
 	
 	private void gameLoop() {
 		while (mainWindow != null && mainWindow.isVisible()) { // gameloop!
 			
-			while (System.nanoTime()-prevTime < 1000.0d/60.0d/0.000001d) {
+			while (System.nanoTime()-prevTime < 1000.0d/framerate/0.000001d) {
 				// ghetto vsync
 			}
 			
@@ -138,14 +143,14 @@ public class PacMan {
 			deltaTime = (System.nanoTime()-prevTime)*0.06d*0.000001d; // 60fps mapping I hope
 			deltaTimeMillis = (System.nanoTime()-prevTime)*0.000001d;
 			FPS = ((1000/0.000001d/(System.nanoTime()+1-prevTime)));
-			//System.out.println("Loop! Previous frame took "+String.format("%.2f",deltaTimeMillis)+"ms, which is approx. "+String.format("%.2f",FPS)+"fps");
+			//Debug.println("Loop! Previous frame took "+String.format("%.2f",deltaTimeMillis)+"ms, which is approx. "+String.format("%.2f",FPS)+"fps");
 			mainWindow.setTitle(String.format("Pac-Man (%.2f FPS)", FPS));
 			int clear[] = new int[xRes*yRes];
 			
 			if (waitTimer > 0)
 				flashTimer = 0;
 			else
-				flashTimer = Mth.mod(flashTimer + deltaTime, flashCycle);
+				flashTimer = Mth.mod(flashTimer + 1, flashCycle);
 			
 			// clear
 			for (int i=0; i < xRes*yRes; i++) {
@@ -156,6 +161,11 @@ public class PacMan {
 			System.arraycopy(clear, 0, a, 0, clear.length);
 			
 			Tilemaps.drawToMain(Tilemaps.highScorePrint, 0);
+			
+			int[] _1upBlackout = new int[] {0,0,0};
+			
+			if ((Math.floor(flashTimer/(flashCycle/2)) != 0))
+				Tilemaps.drawToMain(_1upBlackout, 4);
 			
 			// draw 1up
 		    int[] player1ScoreTilemap = Tilemaps.intToTilemap(score1p);
@@ -192,18 +202,41 @@ public class PacMan {
 					gMain.drawImage(mainTiles, xcoord, ycoord, xcoord+8, ycoord+8 , 0, background[i]*8, 8, (background[i]*8)+8, null);
 			}
 			
+			Tilemaps.drawToMain(Tilemaps.livesPrint, 982);
+			
 			if (waitTimer > 0)
 				waitTimer--;
 			
-			if (waitTimer > 0) {
+			int[] livesTilemap = Tilemaps.intToTilemap(livesLeft);
+			Tilemaps.drawToMain(livesTilemap, 988);
+			
+			if (waitTimer > 0 || gameOver) {
 				drawObjectsPaused();
 				if (waitTimer <= 150) {
 					if (playerText != null)
 					{
 						deleteObject(playerText);
 						playerText = null;
+						livesLeft--;
 					}
 				}
+				
+				if (gameOver) {
+					waitTimer = 300;
+					
+					if (Controls.keyGotten) {
+						gameOver = false;
+						resetAll();
+					}
+					
+					if (gameOverText == null) {
+						gameOverText = spawnObject(new com.btyoungscientist.pacman.object.Text(84, 168, 3));
+					}
+				} else if (gameOverText != null) {
+					deleteObject(gameOverText);
+					gameOverText = null;
+				}
+				
 				Sprite.RenderSprites();
 				FinishUpFrame();
 				continue;
@@ -216,7 +249,7 @@ public class PacMan {
 			}
 			
 			if (eatenDotCount >= 248) {
-				tmp_closeTimer+=deltaTime;
+				tmp_closeTimer++;
 				drawObjectsPaused();
 				if (waitTimer <= 150)
 					Sprite.RenderSprites();
@@ -227,10 +260,8 @@ public class PacMan {
 			if (waitTimer <= 0)
 				updateObjects();
 
-			int[] eatenDotCountTilemap = Tilemaps.intToTilemap(eatenDotCount);
-			for (int i = 0; i < eatenDotCountTilemap.length; i++) {
-				background[i+(1000-eatenDotCountTilemap.length)] = eatenDotCountTilemap[i];
-			}
+			//int[] eatenDotCountTilemap = Tilemaps.intToTilemap(eatenDotCount);
+			//Tilemaps.drawToMain(eatenDotCountTilemap, 999);
 			
 			if (bigDotTimer > 0 && waitTimer <= 0) {
 				bigDotTimer--;
@@ -266,7 +297,6 @@ public class PacMan {
 		try {
 			mainTiles = ImageIO.read(getClass().getResourceAsStream("/sprite/tiles.png"));
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 			System.exit(0);
 		}
@@ -281,8 +311,12 @@ public class PacMan {
 		mainWindow.add(jPanel, BorderLayout.CENTER);
 		mainWindow.pack();
 		mainWindow.setVisible(true);
-		playerText = spawnObject(new com.btyoungscientist.pacman.object.Text(80, 120, 1));
-		readyText = spawnObject(new com.btyoungscientist.pacman.object.Text(96, 168, 0));
+		if (gameOver) {
+			gameOverText = spawnObject(new com.btyoungscientist.pacman.object.Text(84, 168, 3));
+		} else {
+			playerText = spawnObject(new com.btyoungscientist.pacman.object.Text(80, 120, 1));
+			readyText = spawnObject(new com.btyoungscientist.pacman.object.Text(96, 168, 0));
+		}
 		clyde = spawnObject(new com.btyoungscientist.pacman.object.ghosts.Clyde());
 		inky = spawnObject(new com.btyoungscientist.pacman.object.ghosts.Inky());
 		pinky = spawnObject(new com.btyoungscientist.pacman.object.ghosts.Pinky());
@@ -292,13 +326,13 @@ public class PacMan {
 	
 	// entry point
 	public static void main(String[] args) {
-		System.out.println("Starting Pac-Man!");
+		Debug.println("Starting Pac-Man!");
 		instance = new PacMan();
 		
 		ArgumentHandlers.parseArgs(args);
 		instance.createWindow();
 		instance.gameLoop();
-		System.out.println("Exiting!");
+		Debug.println("Exiting!");
 		System.exit(0);
 	}
 	
@@ -311,11 +345,22 @@ public class PacMan {
 		waitTimer = 150;
 		bigDotTimer = 0;
 		scatterTimer = 300;
+		livesLeft--;
+		if (livesLeft < 0) {
+			//resetAll();
+			livesLeft = 0;
+			gameOver = true;
+			return;
+		}
 		deleteObject(player);
 		deleteObject(blinky);
 		deleteObject(pinky);
 		deleteObject(inky);
 		deleteObject(clyde);
+		if (playerText != null)
+			deleteObject(playerText);
+		if (readyText != null)
+			deleteObject(readyText);
 		readyText = spawnObject(new com.btyoungscientist.pacman.object.Text(96, 168, 0));
 		clyde = spawnObject(new com.btyoungscientist.pacman.object.ghosts.Clyde());
 		inky = spawnObject(new com.btyoungscientist.pacman.object.ghosts.Inky());
@@ -335,6 +380,10 @@ public class PacMan {
 		deleteObject(pinky);
 		deleteObject(inky);
 		deleteObject(clyde);
+		if (playerText != null)
+			deleteObject(playerText);
+		if (readyText != null)
+			deleteObject(readyText);
 		readyText = spawnObject(new com.btyoungscientist.pacman.object.Text(96, 168, 0));
 		clyde = spawnObject(new com.btyoungscientist.pacman.object.ghosts.Clyde());
 		inky = spawnObject(new com.btyoungscientist.pacman.object.ghosts.Inky());
@@ -351,11 +400,22 @@ public class PacMan {
 		tmp_closeTimer = 0;
 		scatterTimer = 420;
 		scatterCount = 0;
-		deleteObject(player);
-		deleteObject(blinky);
-		deleteObject(pinky);
-		deleteObject(inky);
-		deleteObject(clyde);
+		livesLeft = lives;
+		score1p = 0;
+		score2p = 0;
+		try {
+			deleteObject(player);
+			deleteObject(blinky);
+			deleteObject(pinky);
+			deleteObject(inky);
+			deleteObject(clyde);
+		} catch (Exception e) {
+			Debug.println("No objects to delete in resetAll");
+		}
+		if (playerText != null)
+			deleteObject(playerText);
+		if (readyText != null)
+			deleteObject(readyText);
 		playerText = spawnObject(new com.btyoungscientist.pacman.object.Text(80, 120, 1));
 		readyText = spawnObject(new com.btyoungscientist.pacman.object.Text(96, 168, 0));
 		clyde = spawnObject(new com.btyoungscientist.pacman.object.ghosts.Clyde());
@@ -372,7 +432,7 @@ public class PacMan {
 		eatenGhostCount++;
 		int scoreToAdd = (int)Math.pow(2, eatenGhostCount) * 10;
 		addScore(scoreToAdd);
-		System.out.printf("Awarded player with %d points for eating a ghost.\n", scoreToAdd*10);
+		Debug.printf("Awarded player with %d points for eating a ghost.\n", scoreToAdd*10);
 	}
 	
 	public static int[] background = Maze.maze.clone();

@@ -3,7 +3,7 @@ package com.btyoungscientist.pacman.object.ghosts;
 public class Clyde extends Ghost {
 	
 	int homeX = 128;
-	int homeY = 144;
+	int homeY = 140;
 	
 	public Clyde() {
 		super();
@@ -19,6 +19,10 @@ public class Clyde extends Ghost {
 	
 	int getGhostColorID() {
 		return 3;
+	}
+	
+	Ghost getGhostToWaitOn() {
+		return (Ghost) pacMan.inky;
 	}
 	
 	boolean isScared() {

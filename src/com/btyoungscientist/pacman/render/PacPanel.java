@@ -21,7 +21,7 @@ public class PacPanel extends JPanel {
 	@Override
     public void paintComponent(Graphics g) {
         super.paintComponent(g);
-        //System.out.println("Repainting PacPanel!");
+        //Debug.println("Repainting PacPanel!");
         g.drawImage(PacMan.instance.mainImage, 0, 1, PacMan.xRes*PacMan.windowScale, PacMan.yRes*PacMan.windowScale, null);
     }
 }

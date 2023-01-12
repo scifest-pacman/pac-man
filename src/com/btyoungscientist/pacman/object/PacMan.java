@@ -117,25 +117,27 @@ public class PacMan extends GameObject {
 			rotation = rotations.right;
 		}
 		
-		switch (rotation) {
-		case left:
-			posy = ((int)Math.floor(posy/8)*8)+4;
-			posx -= speed;
-			break;
-		case right:
-			posy = ((int)Math.floor(posy/8)*8)+4;
-			posx += speed;
-			break;
-		case up:
-			posx = ((int)Math.floor(posx/8)*8)+4;
-			posy -= speed;
-			break;
-		case down:
-			posx = ((int)Math.floor(posx/8)*8)+4;
-			posy += speed;
-			break;
-		default:
-			break;
+		if (!isDying) {
+			switch (rotation) {
+			case left:
+				posy = ((int)Math.floor(posy/8)*8)+4;
+				posx -= speed;
+				break;
+			case right:
+				posy = ((int)Math.floor(posy/8)*8)+4;
+				posx += speed;
+				break;
+			case up:
+				posx = ((int)Math.floor(posx/8)*8)+4;
+				posy -= speed;
+				break;
+			case down:
+				posx = ((int)Math.floor(posx/8)*8)+4;
+				posy += speed;
+				break;
+			default:
+				break;
+			}
 		}
 		
 		posx = Mth.mod(posx, pacMan.xRes);
@@ -170,7 +172,7 @@ public class PacMan extends GameObject {
 			curAnim = 4;
 			if (pacMan.waitTimer <= 90)
 				animTimer++;
-			if (animTimer/animSpeedDiv >= anims[4].frames.length)
+			if (animTimer/animSpeedDiv >= anims[4].frames.length-1)
 			{
 				pacMan.die();
 				return;
@@ -251,6 +253,8 @@ public class PacMan extends GameObject {
 	}
 	
 	private void eatDots() {
+		if (isDying)
+			return;
 		int currentTile = (int)(Math.floor(posx/8.0d) + (Math.floor(posy/8.0d) * 28));//(int)(((double)posx/net.torutheredfox.pacman.PacMan.xRes)*26) + (int)(((double)posy/net.torutheredfox.pacman.PacMan.yRes)*33*26);
 		if (pacMan.background[currentTile] == 0x2D || pacMan.background[currentTile] == 0x2E) {
 			boolean isBigDot = pacMan.background[currentTile] == 0x2E;

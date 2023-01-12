@@ -13,10 +13,10 @@ public class ArgumentHandlers {
 				}
 				PacMan.scoreHigh = _scoreHighNonDiv / 10;
 				if (PacMan.scoreHigh * 10 != _scoreHighNonDiv) {
-					System.out.println("WARNING: last digit of entered high score ignored!");
+					Debug.println("WARNING: last digit of entered high score ignored!");
 				}
 			} catch (Exception e) {
-				System.out.println("Failed to parse argument.\n" + e);
+				Debug.println("Failed to parse argument.\n" + e);
 			}
 		}
 	}
