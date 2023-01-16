@@ -1,4 +1,4 @@
-package ie.scifest.pacman.util;
+package com.btyoungscientist.pacman.util;
 
 public class Mth {
 	public static double mod(double numerator, double denominator) {

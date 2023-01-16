@@ -1,28 +1,29 @@
-package ie.scifest.pacman.object;
+package com.btyoungscientist.pacman.object;
 
-import ie.scifest.pacman.Controls;
-import ie.scifest.pacman.Controls.Keys;
-import ie.scifest.pacman.render.Animation;
-import ie.scifest.pacman.render.Sprite;
-import ie.scifest.pacman.render.Animation.AnimationFrame;
-import ie.scifest.pacman.util.Mth;
+import com.btyoungscientist.pacman.Controls;
+import com.btyoungscientist.pacman.Controls.Keys;
+import com.btyoungscientist.pacman.render.*;
+import com.btyoungscientist.pacman.render.Animation.AnimationFrame;
+import com.btyoungscientist.pacman.util.Mth;
 
 @SuppressWarnings("static-access")
 public class PacMan extends GameObject {
 	
-	int testCoord = 0;
 	int speed = 1;
 	int curAnim = 0;
-	int animTimer = 0;
+	public int animTimer = 0;
 	int animSpeedDiv = 3;
 	
 	int posxprev;
 	int posyprev;
 	
+	public boolean isDying = false;
+	public boolean justAte = false;
+	
 	public PacMan() {
 		super();
-		posx = posxprev = 104;
-		posy = posyprev = 208;
+		posx = posxprev = 112;
+		posy = posyprev = 212;
 	}
 	
 	Animation[] anims = new Animation[] {
@@ -56,25 +57,47 @@ public class PacMan extends GameObject {
 		
 		new Animation(new AnimationFrame[] { // death
 				new AnimationFrame(16, 16, 0, 0),
+				new AnimationFrame(16, 16, 0, 0),
+				new AnimationFrame(16, 16, 16, 0),
 				new AnimationFrame(16, 16, 16, 0),
 				new AnimationFrame(16, 16, 32, 0),
+				new AnimationFrame(16, 16, 32, 0),
+				new AnimationFrame(16, 16, 48, 0),
 				new AnimationFrame(16, 16, 48, 0),
 				new AnimationFrame(16, 16, 64, 0),
+				new AnimationFrame(16, 16, 64, 0),
+				new AnimationFrame(16, 16, 80, 0),
 				new AnimationFrame(16, 16, 80, 0),
 				new AnimationFrame(16, 16, 96, 0),
+				new AnimationFrame(16, 16, 96, 0),
+				new AnimationFrame(16, 16, 112, 0),
 				new AnimationFrame(16, 16, 112, 0),
 				new AnimationFrame(16, 16, 128, 0),
+				new AnimationFrame(16, 16, 128, 0),
 				new AnimationFrame(16, 16, 144, 0),
+				new AnimationFrame(16, 16, 144, 0),
+				new AnimationFrame(16, 16, 160, 0),
 				new AnimationFrame(16, 16, 160, 0),
 				new AnimationFrame(16, 16, 176, 0),
 				new AnimationFrame(16, 16, 176, 0),
+				new AnimationFrame(16, 16, 176, 0),
+				new AnimationFrame(16, 16, 176, 0),
+				new AnimationFrame(16, 16, 176, 16), // blank
+				new AnimationFrame(16, 16, 176, 16), // blank
+				new AnimationFrame(16, 16, 176, 16), // blank
+				new AnimationFrame(16, 16, 176, 16), // blank
+				new AnimationFrame(16, 16, 176, 16), // blank
+				new AnimationFrame(16, 16, 176, 16), // blank
+				new AnimationFrame(16, 16, 176, 16), // blank
 				new AnimationFrame(16, 16, 176, 16), // blank
 		}),
 	};
 	
 	public void update() {
 		super.update();
-		testCoord++;
+		
+		if (pacMan.waitTimer == 0)
+			justAte = false;
 		
 		int xColOff = 0;
 		int yColOff = 0;		
@@ -84,45 +107,51 @@ public class PacMan extends GameObject {
 		int leftTile = (int)(Math.floor((posx-8+xColOff)/8.0d) + (Math.floor((posy+yColOff)/8.0d) * 28));
 		int rightTile = (int)(Math.floor((posx+8+xColOff)/8.0d) + (Math.floor((posy+yColOff)/8.0d) * 28));
 		
-		if (Controls.GetKey(Keys.up) && !Controls.GetKey(Keys.down) && !(pacMan.background[upTile] == 6)) {
+		if (Controls.GetKey(Keys.up) && !Controls.GetKey(Keys.down) && !(pacMan.background[upTile] > 46) && posx<224) {
 			rotation = rotations.up;
-		} else if (Controls.GetKey(Keys.down) && !Controls.GetKey(Keys.up) && !(pacMan.background[downTile] == 6)) {
+		} else if (Controls.GetKey(Keys.down) && !Controls.GetKey(Keys.up) && !(pacMan.background[downTile] > 46) && posx<224) {
 			rotation = rotations.down;
-		} else if (Controls.GetKey(Keys.left) && !Controls.GetKey(Keys.right) && !(pacMan.background[leftTile] == 6)) {
+		} else if (Controls.GetKey(Keys.left) && !Controls.GetKey(Keys.right) && !(pacMan.background[leftTile] > 46)) {
 			rotation = rotations.left;
-		} else if (Controls.GetKey(Keys.right) && !Controls.GetKey(Keys.left) && !(pacMan.background[rightTile] == 6)) {
+		} else if (Controls.GetKey(Keys.right) && !Controls.GetKey(Keys.left) && !(pacMan.background[rightTile] > 46)) {
 			rotation = rotations.right;
 		}
 		
-		switch (rotation) {
-		case left:
-			posy = ((int)Math.floor(posy/8)*8)+4;
-			posx -= speed;
-			break;
-		case right:
-			posy = ((int)Math.floor(posy/8)*8)+4;
-			posx += speed;
-			break;
-		case up:
-			posx = ((int)Math.floor(posx/8)*8)+4;
-			posy -= speed;
-			break;
-		case down:
-			posx = ((int)Math.floor(posx/8)*8)+4;
-			posy += speed;
-			break;
-		default:
-			break;
+		if (!isDying) {
+			switch (rotation) {
+			case left:
+				posy = ((int)Math.floor(posy/8)*8)+4;
+				posx -= speed;
+				break;
+			case right:
+				posy = ((int)Math.floor(posy/8)*8)+4;
+				posx += speed;
+				break;
+			case up:
+				posx = ((int)Math.floor(posx/8)*8)+4;
+				posy -= speed;
+				break;
+			case down:
+				posx = ((int)Math.floor(posx/8)*8)+4;
+				posy += speed;
+				break;
+			default:
+				break;
+			}
 		}
 		
 		posx = Mth.mod(posx, pacMan.xRes);
 		posy = Mth.mod(posy, pacMan.yRes);
+		
+		curTile = (int)(Math.floor((posx)/8.0d) + (Math.floor((posy)/8.0d) * 28));
 		
 		doCollision();
 		
 		eatDots();
 		
 		draw(false);
+		
+		//System.out.printf("pacman %s, %s\r", posx, posy);
 		
 		posxprev = Mth.mod(posx, pacMan.xRes);
 		posyprev = Mth.mod(posy, pacMan.yRes);
@@ -131,17 +160,39 @@ public class PacMan extends GameObject {
 	AnimationFrame curFrame = anims[curAnim].frames[0];
 	
 	public void draw(boolean drawOnly) {
-		if (!drawOnly) {
-		curAnim = rotation.ordinal();
-		animTimer += Mth.dist(posx, posy, posxprev, posyprev);
-		curFrame = anims[curAnim].frames[(int)(animTimer/animSpeedDiv) % anims[curAnim].frames.length];
+		if (justAte || (pacMan.waitTimer > 150))
+			return;
+		if (!drawOnly && (!isDying || pacMan.waitTimer > 90)) {
+			curAnim = rotation.ordinal();
+			if (pacMan.waitTimer == 0)
+				animTimer += Mth.dist(posx, posy, posxprev, posyprev);
+			curFrame = anims[curAnim].frames[(int)(animTimer/animSpeedDiv) % anims[curAnim].frames.length];
+		}
+		if (isDying) {
+			curAnim = 4;
+			if (pacMan.waitTimer <= 90)
+				animTimer++;
+			if (animTimer/animSpeedDiv >= anims[4].frames.length-1)
+			{
+				pacMan.die();
+				return;
+			}
+			curFrame = anims[4].frames[(int)Math.min(animTimer/animSpeedDiv, anims[4].frames.length-1)];
 		}
 		Sprite.DrawSprite("/sprite/pacman.png", posx-8, posy-8, curFrame.width, curFrame.height, curFrame.rectX, curFrame.rectY);
+	}
+	
+	public void die() {
+		pacMan.waitTimer = 120;
+		animTimer = 0;
+		isDying = true;
 	}
 	
 	private void doCollision() {
 		int sensorPosX = posx;
 		int sensorPosY = posy;
+		
+		boolean blockInTunnel = false;
 		
 		switch (rotation) {
 		case left:
@@ -152,9 +203,13 @@ public class PacMan extends GameObject {
 			break;
 		case up:
 			sensorPosY -= 4;
+			if (posx >= 224)
+				blockInTunnel = true;
 			break;
 		case down:
 			sensorPosY += 4;
+			if (posx >= 224)
+				blockInTunnel = true;
 			break;
 		default:
 			break;
@@ -167,7 +222,7 @@ public class PacMan extends GameObject {
 		
 		int currentTile = (int)(Mth.mod(Math.floor(sensorPosX/8.0d), 28) + Mth.mod((Math.floor(sensorPosY/8.0d) * 28), 40*28));
 		int iterationCount = 0;
-		if (pacMan.background[currentTile] == 6 && iterationCount < 8) { // lets just say this is a wall for now
+		if ((pacMan.background[currentTile] > 46 || blockInTunnel) && iterationCount < 8) { // lets just say this is a wall for now
 			iterationCount++;
 			sensorPosX = posx;
 			sensorPosY = posy;
@@ -198,9 +253,15 @@ public class PacMan extends GameObject {
 	}
 	
 	private void eatDots() {
+		if (isDying)
+			return;
 		int currentTile = (int)(Math.floor(posx/8.0d) + (Math.floor(posy/8.0d) * 28));//(int)(((double)posx/net.torutheredfox.pacman.PacMan.xRes)*26) + (int)(((double)posy/net.torutheredfox.pacman.PacMan.yRes)*33*26);
 		if (pacMan.background[currentTile] == 0x2D || pacMan.background[currentTile] == 0x2E) {
-			pacMan.addScore(pacMan.background[currentTile] == 0x2D ? 1 : 5);
+			boolean isBigDot = pacMan.background[currentTile] == 0x2E;
+			pacMan.addScore(isBigDot ? 5 : 1);
+			if (isBigDot) {
+				pacMan.bigDot();
+			}
 			pacMan.eatenDotCount++;
 			pacMan.background[currentTile] = 0;
 			switch (rotation) { // stop for a frame by undoing movement

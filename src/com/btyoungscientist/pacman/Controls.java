@@ -1,4 +1,4 @@
-package ie.scifest.pacman;
+package com.btyoungscientist.pacman;
 
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
@@ -21,6 +21,7 @@ public class Controls extends KeyAdapter {
 	private static boolean KeyLeftPrev = false;
 	public static boolean KeyRight = false;
 	private static boolean KeyRightPrev = false;
+	public static boolean keyGotten = false;
 	
 	public static boolean GetKey(Keys key) {
 		boolean current = false;
@@ -96,30 +97,34 @@ public class Controls extends KeyAdapter {
 		// New key press
 		int key = e.getKeyCode();                                                
 
-    	if (key == KeyEvent.VK_UP) {                                          
+		keyGotten = true;
+    	if (key == KeyEvent.VK_UP || key == KeyEvent.VK_W) {                                          
     		KeyUp = true;
-    	} else if (key == KeyEvent.VK_DOWN) {                                    
+    	} else if (key == KeyEvent.VK_DOWN || key == KeyEvent.VK_S) {                                    
     		KeyDown = true;
-    	} else if (key == KeyEvent.VK_LEFT) {                                    
+    	} else if (key == KeyEvent.VK_LEFT || key == KeyEvent.VK_A) {                                    
     		KeyLeft = true;
-    	} else if (key == KeyEvent.VK_RIGHT) {                                    
+    	} else if (key == KeyEvent.VK_RIGHT || key == KeyEvent.VK_D) {                                    
     		KeyRight = true;
-    	}             
+    	} else {
+    		keyGotten = false;
+    	}
 	}
 	
 	public void keyReleased(KeyEvent e){       
 		// New key press
 		int key = e.getKeyCode();                                                
 		
-		if (key == KeyEvent.VK_UP) {                                          
+		if (key == KeyEvent.VK_UP || key == KeyEvent.VK_W) {                                          
 			KeyUp = false;
-		} else if (key == KeyEvent.VK_DOWN) {                                    
+		} else if (key == KeyEvent.VK_DOWN || key == KeyEvent.VK_S) {                                    
 			KeyDown = false;
-		} else if (key == KeyEvent.VK_LEFT) {                                    
+		} else if (key == KeyEvent.VK_LEFT || key == KeyEvent.VK_A) {                                    
 			KeyLeft = false;
-		} else if (key == KeyEvent.VK_RIGHT) {                                    
+		} else if (key == KeyEvent.VK_RIGHT || key == KeyEvent.VK_D) {                                    
 			KeyRight = false;
-		}                              
+		}
+		keyGotten = false;
 	}
 	
 	public void updateOld() {
